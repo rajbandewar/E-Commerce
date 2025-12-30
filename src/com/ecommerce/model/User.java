@@ -9,7 +9,7 @@ public class User {
     private String city;
     private String email;
     private String mobile;
-    int role; // 1-admin 2-guest
+    int role = 2; // 1-admin 2-guest
 
     public int getUserId() {
         return userId;

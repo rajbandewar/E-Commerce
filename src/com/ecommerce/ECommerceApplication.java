@@ -75,6 +75,8 @@ public class ECommerceApplication {
         String email = readString("email:");
         System.out.println("Enter Mobile:");
         String mobile = readString("Mobile:");
+        System.out.println("Enter Role: 1= admin 2 = normal user");
+        int role = readInt();
         User user = new User();
         user.setFirst_name(firstName);
         user.setLast_name(lastName);
@@ -83,6 +85,7 @@ public class ECommerceApplication {
         user.setCity(city);
         user.setEmail(email);
         user.setMobile(mobile);
+        user.setRole(role);
         System.out.println("User " + user);
         registerUserOrShowError(user);
     }
