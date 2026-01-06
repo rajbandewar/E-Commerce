@@ -1,8 +1,10 @@
 package com.ecommerce;
 
 import com.ecommerce.exception.InvalidInputException;
+import com.ecommerce.logic.CartLogic;
 import com.ecommerce.logic.ProductLogic;
 import com.ecommerce.logic.UserLogic;
+import com.ecommerce.model.CartItem;
 import com.ecommerce.model.Product;
 import com.ecommerce.model.User;
 
@@ -16,6 +18,9 @@ public class ECommerceApplication {
     }
 
     ProductLogic productLogic = new ProductLogic();
+    Scanner sc;
+    UserLogic userLogic = new UserLogic();
+
     public void initMenu() {
         System.out.println("==============================\n" +
                 " Welcome to E-Commerce App\n" +
@@ -23,9 +28,8 @@ public class ECommerceApplication {
         showMainMenu();
     }
 
-    Scanner sc;
-
     public void showMainMenu() {
+        loginInUser = null;
         System.out.println("1. Register\n" +
                 "2. Login\n" +
                 "3. View Products (Guest)\n" +
@@ -90,8 +94,6 @@ public class ECommerceApplication {
         registerUserOrShowError(user);
     }
 
-    UserLogic userLogic = new UserLogic();
-
     void registerUserOrShowError(User user) {
         try {
             userLogic.register(user);
@@ -115,7 +117,7 @@ public class ECommerceApplication {
             }
         } catch (Exception e) {
             System.out.println("Fail to register user please enter details again");
-            showRegMenu();
+            showMainMenu();
         }
     }
 
@@ -207,9 +209,9 @@ public class ECommerceApplication {
 
             for (User user : users) {
                 System.out.println(
-                        user.getUserId() + " | " +
-                                user.getFirst_name() +
-                                user.getLast_name() + " | " +
+                        user.getUserId() + " |      " +
+                                user.getFirst_name() +" "+
+                                user.getLast_name() + "      | " +
                                 user.getUserName() + " | " +
                                 user.getEmail() + " | " +
                                 user.getMobile() + " | " +
@@ -281,11 +283,11 @@ public class ECommerceApplication {
                     break;
 
                 case 2:
-                    //buyProductMenu(user);
+                    buyProduct();
                     break;
 
                 case 3:
-                    //  viewCartMenu(user);
+                    viewCart();
                     break;
 
                 case 4:
@@ -305,6 +307,7 @@ public class ECommerceApplication {
         }
 
     }
+
 
     void logout() {
         loginInUser = null;
@@ -356,6 +359,40 @@ public class ECommerceApplication {
         }
     }
 
+    void buyProduct(){
+        try {
+            if (loginInUser==null){
+                System.out.println("Please login");
+                showMainMenu();
+            }
+            System.out.println("Enter Product ID : ");
+            int id = readInt();
+            System.out.println("Enter Quantity : ");
+            int quantity = readInt();
+            new CartLogic().addProductToCart(loginInUser.getUserId(),id,quantity);
+            System.out.println("Want to add more products (Y/N)");
+            if ("Y".equals(sc.next())){
+                buyProduct();
+            }
+        } catch (Exception e) {
+
+        }
+    }
+    private void viewCart() {
+        List<CartItem> cartItems=new CartLogic().getCartItems(loginInUser.getUserId());
+        try {
+            System.out.println("\n         NAME          | QTY");
+            System.out.println("-----------------------------------------");
+
+            for (CartItem ci : cartItems) {
+                System.out.println(
+                                "         "+ci.getProduct().getProductName() + "          | " +
+                                        ci.getQuantity());
+            }
+        } catch (Exception e) {
+
+        }
+    }
 
     private int readInt() {
         while (!sc.hasNextInt()) {

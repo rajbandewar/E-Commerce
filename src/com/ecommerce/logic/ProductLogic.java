@@ -24,4 +24,6 @@ public class ProductLogic {
         }
         return productDao.getQuantity(productId);
     }
+
+
 }
