@@ -2,15 +2,19 @@ package com.ecommerce;
 
 import com.ecommerce.exception.InvalidInputException;
 import com.ecommerce.logic.CartLogic;
+import com.ecommerce.logic.OrderLogic;
 import com.ecommerce.logic.ProductLogic;
 import com.ecommerce.logic.UserLogic;
 import com.ecommerce.model.CartItem;
+import com.ecommerce.model.OrderedProduct;
 import com.ecommerce.model.Product;
 import com.ecommerce.model.User;
 
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
+
+import static com.ecommerce.util.InputUtil.*;
 
 public class ECommerceApplication {
     public static void main(String[] args) {
@@ -22,19 +26,14 @@ public class ECommerceApplication {
     UserLogic userLogic = new UserLogic();
 
     public void initMenu() {
-        System.out.println("==============================\n" +
-                " Welcome to E-Commerce App\n" +
-                "==============================");
+        System.out.println("==============================\n" + " Welcome to E-Commerce App\n" + "==============================");
         showMainMenu();
     }
 
     public void showMainMenu() {
         loginInUser = null;
-        System.out.println("1. Register\n" +
-                "2. Login\n" +
-                "3. View Products (Guest)\n" +
-                "4. Exit\n" +
-                "Enter your choice:");
+        System.out.println("======Main Menu=======");
+        System.out.println("1. Register\n" + "2. Login\n" + "3. View Products (Guest)\n" + "4. Exit\n" + "Enter your choice:");
         sc = new Scanner(System.in);
         try {
             int choice = sc.nextInt();
@@ -66,21 +65,21 @@ public class ECommerceApplication {
 
     void showRegMenu() {
         System.out.println("Enter First Name:");
-        String firstName = readString("First Name:");
+        String firstName = readString(sc, "First Name:");
         System.out.println("Enter Last Name:");
         String lastName = sc.next().trim();// allowed tobe blank
         System.out.println("Enter Username:");
-        String userName = readString("User Name:");
+        String userName = readString(sc, "User Name:");
         System.out.println("Enter Password:");
-        String password = readString("Password:");
+        String password = readString(sc, "Password:");
         System.out.println("Enter City:");
         String city = sc.next().trim(); // allowed tobe blank
         System.out.println("Enter Email:");
-        String email = readString("email:");
+        String email = readString(sc, "email:");
         System.out.println("Enter Mobile:");
-        String mobile = readString("Mobile:");
+        String mobile = readString(sc, "Mobile:");
         System.out.println("Enter Role: 1= admin 2 = normal user");
-        int role = readInt();
+        int role = readInt(sc);
         User user = new User();
         user.setFirst_name(firstName);
         user.setLast_name(lastName);
@@ -104,7 +103,7 @@ public class ECommerceApplication {
             if ("Username already exists".equals(e.getMessage())) {
                 System.out.println("Username already exists Enter new Username :");
                 System.out.println("\nOR enter exit to navigate main menu:");
-                String userName = readString("User Name:");
+                String userName = readString(sc, "User Name:");
                 if ("exit".equals(userName)) {
                     showMainMenu();
                 } else {
@@ -125,12 +124,13 @@ public class ECommerceApplication {
 
     void showLoginUI() {
         System.out.println("Enter Username:");
-        String userName = readString("User Name:");
+        String userName = readString(sc, "User Name:");
         System.out.println("Enter Password:");
-        String password = readString("Password:");
+        String password = readString(sc, "Password:");
         try {
             UserLogic userLogic = new UserLogic();
             User user = userLogic.login(userName, password);
+            loginInUser = user;
             if (user != null) {
                 if (user.getRole() == 1) {
                     //Admin
@@ -138,7 +138,7 @@ public class ECommerceApplication {
                 } else {
                     showUserMenu(user);
                 }
-                loginInUser = user;
+
             } else {
                 System.out.println("Failed to login ");
                 showLoginUI();
@@ -161,7 +161,7 @@ public class ECommerceApplication {
             System.out.println("5. Logout");
             System.out.print("Enter choice: ");
 
-            int choice = readInt();
+            int choice = readInt(sc);
 
             try {
                 switch (choice) {
@@ -177,7 +177,7 @@ public class ECommerceApplication {
                         viewRegisteredUsers();
                         break;
                     case 4:
-                        //viewUserHistoryMenu();
+                        viewUserHistory();
                         break;
 
                     case 5:
@@ -193,14 +193,32 @@ public class ECommerceApplication {
         }
     }
 
+    private void viewUserHistory() {
+        System.out.println("Enter UserName: ");
+        String userName = sc.next();
+        List<OrderedProduct> orderedProducts = new OrderLogic().getUserOrderHistory(userName);
+        if (orderedProducts.isEmpty()) {
+            System.out.println("No order placed by user");
+            return;
+        }
+        for (int i = 0; i < orderedProducts.size(); i++) {
+            OrderedProduct orderedProduct = orderedProducts.get(i);
+            System.out.print((i + 1) + ")");
+            System.out.print(" Product id : " + orderedProduct.getProductId());
+            System.out.print(" >>Product Description: " + orderedProduct.getDescription());
+            System.out.print(" >>Quantity: " + orderedProduct.getQuantity());
+            System.out.println("\n");
+        }
+
+    }
+
     private void viewRegisteredUsers() {
         try {
             List<User> users = userLogic.getAllUsers();
 
             if (users.isEmpty()) {
                 System.out.println("No users registered yet.");
-                if (loginInUser != null)
-                    showAdminMenu(loginInUser);
+                if (loginInUser != null) showAdminMenu(loginInUser);
                 return;
             }
 
@@ -208,16 +226,7 @@ public class ECommerceApplication {
             System.out.println("--------------------------------------------------");
 
             for (User user : users) {
-                System.out.println(
-                        user.getUserId() + " |      " +
-                                user.getFirst_name() +" "+
-                                user.getLast_name() + "      | " +
-                                user.getUserName() + " | " +
-                                user.getEmail() + " | " +
-                                user.getMobile() + " | " +
-                                user.getCity() + " | " +
-                                user.getRole()
-                );
+                System.out.println(user.getUserId() + " |      " + user.getFirst_name() + " " + user.getLast_name() + "      | " + user.getUserName() + " | " + user.getEmail() + " | " + user.getMobile() + " | " + user.getCity() + " | " + user.getRole());
             }
         } catch (Exception e) {
 
@@ -230,27 +239,21 @@ public class ECommerceApplication {
             System.out.println("\n====== ADD PRODUCT ======");
 
             System.out.print("Enter Product Id: ");
-            int productId = readInt();
+            int productId = readInt(sc);
 
             System.out.print("Enter Product Name: ");
-            String name = readString("Product Name");
+            String name = readString(sc, "Product Name");
 
             System.out.print("Enter Product Description: ");
-            String description = readString("Product Description");
+            String description = readString(sc, "Product Description");
 
             System.out.print("Enter Price: ");
-            double price = readDouble();
+            double price = readDouble(sc);
 
             System.out.print("Enter Quantity: ");
-            int quantity = readInt();
+            int quantity = readInt(sc);
 
-            Product product = new Product(
-                    productId,
-                    name,
-                    description,
-                    price,
-                    quantity
-            );
+            Product product = new Product(productId, name, description, price, quantity);
 
             productLogic.addProduct(product);
 
@@ -265,53 +268,53 @@ public class ECommerceApplication {
     }
 
     private void showUserMenu(User user) {
+        while (true) {
+            System.out.println("\n====== USER MENU ======");
+            System.out.println("1. View Products");
+            System.out.println("2. Buy Product");
+            System.out.println("3. View Cart");
+            System.out.println("4. Purchase Items");
+            System.out.println("5. Logout");
+            System.out.print("Enter choice: ");
 
-        System.out.println("\n====== USER MENU ======");
-        System.out.println("1. View Products");
-        System.out.println("2. Buy Product");
-        System.out.println("3. View Cart");
-        System.out.println("4. Purchase Items");
-        System.out.println("5. Logout");
-        System.out.print("Enter choice: ");
+            int choice = readInt(sc);
 
-        int choice = readInt();
+            try {
+                switch (choice) {
+                    case 1:
+                        showProducts();
+                        break;
 
-        try {
-            switch (choice) {
-                case 1:
-                    showProducts();
-                    break;
+                    case 2:
+                        buyProduct();
+                        break;
 
-                case 2:
-                    buyProduct();
-                    break;
+                    case 3:
+                        viewCart();
+                        break;
 
-                case 3:
-                    viewCart();
-                    break;
+                    case 4:
+                        order();
+                        break;
 
-                case 4:
-                    // purchaseMenu(user);
-                    break;
+                    case 5:
+                        System.out.println("Logged out successfully.");
+                        logout();
+                        break;
 
-                case 5:
-                    System.out.println("Logged out successfully.");
-                    logout();
-                    break; // back to main menu
-
-                default:
-                    System.out.println("Invalid choice. Try again.");
+                    default:
+                        System.out.println("Invalid choice. Try again.");
+                }
+            } catch (Exception e) {
+                System.out.println(" " + e.getMessage());
+                break;
             }
-        } catch (Exception e) {
-            System.out.println(" " + e.getMessage());
         }
-
     }
-
 
     void logout() {
         loginInUser = null;
-        showLoginUI();
+        showMainMenu();
     }
 
     void showProducts() {
@@ -319,28 +322,24 @@ public class ECommerceApplication {
 
         if (products.isEmpty()) {
             System.out.println("No products added yet.");
-            if (loginInUser != null){
-                if (loginInUser.getRole() == 1)
-                    showAdminMenu(loginInUser);
-                else {
-                    showUserMenu(loginInUser);
-                }
+
+        } else {
+            System.out.println("\nID | NAME | DESCRIPTION | PRICE | QTY");
+            System.out.println("-----------------------------------------");
+
+            for (Product p : products) {
+                System.out.println(p.getProductId() + " | " + p.getProductName() + " | " + p.getDescription() + " | " + p.getPrice() + " | " + p.getQuantity());
             }
-            return;
+        }
+        if (loginInUser != null) {
+            if (loginInUser.getRole() == 1) showAdminMenu(loginInUser);
+            else {
+                showUserMenu(loginInUser);
+            }
+        } else {
+            showMainMenu();
         }
 
-        System.out.println("\nID | NAME | DESCRIPTION | PRICE | QTY");
-        System.out.println("-----------------------------------------");
-
-        for (Product p : products) {
-            System.out.println(
-                    p.getProductId() + " | " +
-                            p.getProductName() + " | " +
-                            p.getDescription() + " | " +
-                            p.getPrice() + " | " +
-                            p.getQuantity()
-            );
-        }
     }
 
     void showCheckProductQuantity() {
@@ -348,7 +347,7 @@ public class ECommerceApplication {
             System.out.println("\n====== CHECK PRODUCT QUANTITY ======");
 
             System.out.print("Enter Product Id: ");
-            int productId = readInt();
+            int productId = readInt(sc);
             int quantity = productLogic.getQuantity(productId);
             System.out.println("Available Quantity: " + quantity);
 
@@ -359,64 +358,64 @@ public class ECommerceApplication {
         }
     }
 
-    void buyProduct(){
+    void buyProduct() {
         try {
-            if (loginInUser==null){
+            if (loginInUser == null) {
                 System.out.println("Please login");
                 showMainMenu();
             }
             System.out.println("Enter Product ID : ");
-            int id = readInt();
+            int id = readInt(sc);
             System.out.println("Enter Quantity : ");
-            int quantity = readInt();
-            new CartLogic().addProductToCart(loginInUser.getUserId(),id,quantity);
+            int quantity = readInt(sc);
+            new CartLogic().addProductToCart(loginInUser.getUserId(), id, quantity);
             System.out.println("Want to add more products (Y/N)");
-            if ("Y".equals(sc.next())){
+            if ("Y".equalsIgnoreCase(sc.next())) {
                 buyProduct();
             }
         } catch (Exception e) {
-
         }
     }
+
     private void viewCart() {
-        List<CartItem> cartItems=new CartLogic().getCartItems(loginInUser.getUserId());
+        List<CartItem> cartItems = new CartLogic().getCartItems(loginInUser.getUserId());
         try {
-            System.out.println("\n         NAME          | QTY");
+            System.out.println("\n         NAME          | QTY   ");
             System.out.println("-----------------------------------------");
 
             for (CartItem ci : cartItems) {
-                System.out.println(
-                                "         "+ci.getProduct().getProductName() + "          | " +
-                                        ci.getQuantity());
+                System.out.println("         " + ci.getProduct().getProductName() + "          | " + ci.getQuantity());
             }
         } catch (Exception e) {
 
         }
     }
 
-    private int readInt() {
-        while (!sc.hasNextInt()) {
-            System.out.print("Please enter a valid number: ");
-            sc.next();
+    private void order() {
+        try {
+            OrderLogic orderLogic = new OrderLogic();
+            System.out.println("\n====== CheckOut ======");
+            System.out.println("1. Cart");
+            System.out.println("2. Single Product");
+            System.out.print("Enter choice: ");
+            int choice = readInt(sc);
+            switch (choice) {
+                case 1:
+                    orderLogic.orderCart(loginInUser.getUserId());
+                    break;
+                case 2: {
+                    System.out.println("Product Id :");
+                    int productId = readInt(sc);
+                    System.out.println("Quantity :");
+                    int quantity = readInt(sc);
+                    orderLogic.orderProduct(loginInUser.getUserId(), productId, quantity);
+                }
+                break;
+            }
+
+        } catch (Exception e) {
+
         }
-        return sc.nextInt();
     }
 
-    private String readString(String fieldName) {
-        String input = sc.next().trim();
-
-        while (input.isEmpty()) {
-            System.out.print(fieldName + "cannot be empty. Please enter again: ");
-            input = sc.nextLine().trim();
-        }
-        return input;
-    }
-
-    private double readDouble() {
-        while (!sc.hasNextDouble()) {
-            System.out.print("Please enter a valid number: ");
-            sc.next();
-        }
-        return sc.nextDouble();
-    }
 }

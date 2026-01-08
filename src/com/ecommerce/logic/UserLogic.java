@@ -20,8 +20,7 @@ public class UserLogic {
         userDao.registerUser(user);
     }
 
-    public User login(String username, String password)
-            throws InvalidInputException {
+    public User login(String username, String password) {
 
         if (username == null || password == null) {
             throw new InvalidInputException("Username and password required");

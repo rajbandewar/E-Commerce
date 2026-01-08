@@ -5,7 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class BDConfig {
-    private static final String URL = "jdbc:mysql://localhost:3306/ecommerce_db";
+    private static final String URL = "jdbc:mysql://localhost:3306/ecommerce_db_new";
     private static final String USERNAME = "root";
     private static final String PASSWORD = ""; //
 

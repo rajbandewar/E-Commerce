@@ -18,7 +18,7 @@ public class CartDaoImpl implements CartDao {
 
     @Override
     public void addProductToCart(int userId, int productId, int quantity) {
-        String query = "INSERT INTO ecommerce_db.cart_item" +
+        String query = "INSERT INTO cart_item" +
                 "(user_id, product_id, quantity)" +
                 "VALUES(?,?,?);";
         try (Connection con = BDConfig.getConnection();
@@ -43,13 +43,12 @@ public class CartDaoImpl implements CartDao {
              PreparedStatement ps = con.prepareStatement(query)) {
             ps.setInt(1, userId);
             ResultSet rs = ps.executeQuery();
-            List<Product> products;
             while (rs.next()) {
 
                 Product product = new Product(rs.getInt("product_id"),
                         rs.getString("product_name"), rs.getString("description"),
                         rs.getDouble("price"), rs.getInt("quantity"));
-                CartItem cartItem = new CartItem(rs.getInt("cart_item_id"), userId, product, rs.getInt("quantity"));
+                CartItem cartItem = new CartItem(rs.getInt("cart_id"), userId, product, rs.getInt("quantity"));
                 cartItems.add(cartItem);
             }
 

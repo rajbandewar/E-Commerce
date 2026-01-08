@@ -1,9 +1,7 @@
 package com.ecommerce.logic;
 
 import com.ecommerce.dao.CartDao;
-import com.ecommerce.dao.ProductDao;
 import com.ecommerce.dao.impl.CartDaoImpl;
-import com.ecommerce.dao.impl.ProductDaoImpl;
 import com.ecommerce.model.CartItem;
 
 import java.util.List;
