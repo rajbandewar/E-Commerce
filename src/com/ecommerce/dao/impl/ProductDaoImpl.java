@@ -55,7 +55,22 @@ public class ProductDaoImpl implements ProductDao {
 
     @Override
     public Product getProductById(int id) {
-        return null;
+        Product product = null;
+        String query = "SELECT * FROM products WHERE product_id=?";
+        try (Connection con = BDConfig.getConnection();
+             PreparedStatement ps = con.prepareStatement(query)) {
+            ps.setInt(1,id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                 product = new Product(rs.getInt("product_id"),
+                        rs.getString("product_name"), rs.getString("description"),
+                        rs.getDouble("price"), rs.getInt("quantity"));
+
+            }
+            return product;
+        } catch (Exception e) {
+            throw new SQLException(e.getMessage());
+        }
     }
 
     @Override
@@ -75,5 +90,19 @@ public class ProductDaoImpl implements ProductDao {
             throw new SQLException(e.getMessage());
         }
 
+    }
+
+    @Override
+    public void updateQuantityAfterProductSold(Connection con,int productId,int soldQuantity) {
+        String query = "UPDATE products SET quantity = quantity - ? WHERE product_id = ?";
+        try (PreparedStatement ps = con.prepareStatement(query)) {
+            ps.setInt(1, soldQuantity);
+            ps.setInt(2, productId);
+            ps.executeUpdate();
+
+        } catch (Exception e) {
+            //System.out.println("Failed to insert user " + e.getMessage());
+            throw new SQLException(e.getMessage());
+        }
     }
 }

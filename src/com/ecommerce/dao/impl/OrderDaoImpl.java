@@ -1,6 +1,8 @@
 package com.ecommerce.dao.impl;
 
+import com.ecommerce.dao.CartDao;
 import com.ecommerce.dao.OrderDao;
+import com.ecommerce.dao.ProductDao;
 import com.ecommerce.exception.SQLException;
 import com.ecommerce.model.OrderedProduct;
 import com.ecommerce.util.BDConfig;
@@ -14,14 +16,21 @@ import java.util.HashMap;
 import java.util.List;
 
 public class OrderDaoImpl implements OrderDao {
+    private ProductDao productDao = new ProductDaoImpl();
+    private CartDao cartDao = new CartDaoImpl();
+
     @Override
     public void orderProduct(int userId, OrderedProduct orderedProduct) {
         String queryInsertOrder = "INSERT INTO orders" +
                 "(total_bill, user_id)" +
                 "VALUES" +
                 "(?, ?);";
-        try (Connection con = BDConfig.getConnection();
-             PreparedStatement ps = con.prepareStatement(queryInsertOrder, Statement.RETURN_GENERATED_KEYS)) {
+        Connection con = null;
+        PreparedStatement ps = null;
+        try {
+            con = BDConfig.getConnection();
+            ps = con.prepareStatement(queryInsertOrder, Statement.RETURN_GENERATED_KEYS);
+            con.setAutoCommit(false);
 
             ps.setDouble(1, orderedProduct.getQuantity() * orderedProduct.getPrice());
             ps.setInt(2, userId);
@@ -31,13 +40,33 @@ public class OrderDaoImpl implements OrderDao {
                 int orderId = rs.getInt(1);
                 orderedProduct.setOrderId(orderId);
                 insertOrderedProduct(con, orderedProduct);
+                productDao.updateQuantityAfterProductSold(con, orderedProduct.getProductId(), orderedProduct.getQuantity());
             } else {
                 System.out.println(" Order id not found");
             }
 
+            con.commit();
         } catch (Exception e) {
-            System.out.println("Failed to insert order " + e.getMessage());
+            try {
+                if (con != null) {
+                    con.rollback();
+                }
+            } catch (java.sql.SQLException ex) {
+                e.printStackTrace();
+            }
             throw new SQLException(e.getMessage());
+        } finally {
+            try {
+                if (ps != null)
+                    ps.close();
+                if (con != null) {
+                    con.setAutoCommit(true);
+                    con.close();
+                }
+            } catch (java.sql.SQLException e) {
+                System.out.println("Failed to order");
+                e.printStackTrace();
+            }
         }
     }
 
@@ -63,6 +92,8 @@ public class OrderDaoImpl implements OrderDao {
                 for (OrderedProduct op : orderedProducts) {
                     op.setOrderId(orderId);
                     insertOrderedProduct(con, op);
+                    productDao.updateQuantityAfterProductSold(con, op.getProductId(), op.getQuantity());
+                    cartDao.EmptyCartAfterPurchased(con, userId);
                 }
             } else {
                 System.out.println(" Order id not found");
@@ -80,10 +111,10 @@ public class OrderDaoImpl implements OrderDao {
             throw new SQLException(e.getMessage());
         } finally {
             try {
+                if (ps != null)
+                    ps.close();
                 if (con != null) {
                     con.setAutoCommit(true);
-                    if (ps != null)
-                        ps.close();
                     con.close();
                 }
             } catch (java.sql.SQLException e) {

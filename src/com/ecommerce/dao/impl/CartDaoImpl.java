@@ -47,8 +47,8 @@ public class CartDaoImpl implements CartDao {
 
                 Product product = new Product(rs.getInt("product_id"),
                         rs.getString("product_name"), rs.getString("description"),
-                        rs.getDouble("price"), rs.getInt("quantity"));
-                CartItem cartItem = new CartItem(rs.getInt("cart_id"), userId, product, rs.getInt("quantity"));
+                        rs.getDouble("price"), rs.getInt("p.quantity"));
+                CartItem cartItem = new CartItem(rs.getInt("cart_id"), userId, product, rs.getInt("ci.quantity"));
                 cartItems.add(cartItem);
             }
 
@@ -57,5 +57,16 @@ public class CartDaoImpl implements CartDao {
             throw new SQLException(e.getMessage());
         }
 
+    }
+
+    @Override
+    public void EmptyCartAfterPurchased(Connection con, int userId) {
+        String query = "DELETE FROM cart_item WHERE user_id = ?";
+        try (PreparedStatement ps = con.prepareStatement(query)) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            throw new SQLException(e.getMessage());
+        }
     }
 }

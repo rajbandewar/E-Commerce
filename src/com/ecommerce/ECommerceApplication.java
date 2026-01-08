@@ -24,7 +24,7 @@ public class ECommerceApplication {
     ProductLogic productLogic = new ProductLogic();
     Scanner sc;
     UserLogic userLogic = new UserLogic();
-
+    CartLogic cartLogic=new CartLogic();
     public void initMenu() {
         System.out.println("==============================\n" + " Welcome to E-Commerce App\n" + "==============================");
         showMainMenu();
@@ -368,17 +368,18 @@ public class ECommerceApplication {
             int id = readInt(sc);
             System.out.println("Enter Quantity : ");
             int quantity = readInt(sc);
-            new CartLogic().addProductToCart(loginInUser.getUserId(), id, quantity);
-            System.out.println("Want to add more products (Y/N)");
+            cartLogic.addProductToCart(loginInUser.getUserId(), id, quantity);
+            System.out.println("Do you want to view cart (Y/N)");
             if ("Y".equalsIgnoreCase(sc.next())) {
-                buyProduct();
+                viewCart();
             }
         } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
     }
 
     private void viewCart() {
-        List<CartItem> cartItems = new CartLogic().getCartItems(loginInUser.getUserId());
+        List<CartItem> cartItems = cartLogic.getCartItems(loginInUser.getUserId());
         try {
             System.out.println("\n         NAME          | QTY   ");
             System.out.println("-----------------------------------------");
@@ -413,8 +414,8 @@ public class ECommerceApplication {
                 break;
             }
 
-        } catch (Exception e) {
-
+        } catch (InvalidInputException e) {
+            System.out.println(e.getMessage());
         }
     }
 
